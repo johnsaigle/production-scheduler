@@ -1,4 +1,12 @@
 #!/usr/bin/python
+import csv
+
+class Schedule:
+  """Represents the production scheule for one day, projected three weeks in the future across various lines"""
+  def __init__(self, date):
+    self.runs = []
+    self.date = date
+  
 
 """
 A series of batches to be produced in one day
@@ -45,7 +53,7 @@ class Batch:
 Represents one type of product produced in a batch on some Line
 """
 class Product:
-    def __init__(self, brand, base_unit=None, viscosity=None, dimension=None):
+    def __init__(self, brand, viscosity=None, dimension=None, base_unit=None, ):
         self.brand = brand
         self.base_unit = base_unit
         self.viscosity = viscosity
@@ -86,10 +94,7 @@ class Line:
             run.to_pretty_string #
             print ("")
 
-def add_production_line():
-    print ("")
-
-def save_to_csv(filename, filepath=None):
+def save_schedules_to_csv(filename, filepath=None):
     if not filename.endswith('.csv'):
         filename += '.csv'
     if filepath is None:
@@ -99,7 +104,7 @@ def save_to_csv(filename, filepath=None):
         # save to filepath
         print ("TODO")
 
-def load_from_csv(filename, filepath=None):
+def load_schedules_from_csv(filename, filepath=None):
     if not filename.endswith('.csv'):
         filename += '.csv'
     if filepath is None:
@@ -120,29 +125,40 @@ def print_usage():
 def invalid():
     print ("Bad function name. Try %s" % (", ".join(funcs.keys())))
 
-# MAIN PART
-production_lines = []
-schedule = {}
-funcs = {"save": save_to_csv, "load": load_from_csv, "usage": print_usage, "?": print_usage}
+def init_data_from_csv():
+    with open('data.csv', newline='') as csvfile:
+        datareader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        production_lines = next(datareader) # first row in csv is the name of the product lines
 
-##while True:
-##    filename = None
-##    filepath = None
-##    print ("~*~*\tPRODUCTION SCHEDULER\t*~*~")
-##    print ("Type ? for help ")
-##        
-##    action = input(">: ");
-##    action = (action.strip()).split(' ') # parse input
-##        
-##    func = funcs.get(action[0], invalid) # calls action[0]() if found and invalid if not
-##    if func == 'save_to_csv' or 'load_from_csv':
-##        if len(action) < 2:
-##            print_usage()
-##        else:
-##            filename = action[1]
-##            if len(action) == 3:
-##                filepath = action[2]
-##            func(filename, filepath) # filename, filepath
+        for row in datareader:
+            products = (Product(",".join(row)))
+
+        print (products.brand)
+        # the rest of the csv file is the list of all avaialble products, one per row
+# MAIN PART
+init_data_from_csv()
+products = [] # read in all products from file
+schedules = {}
+funcs = {"save": save_schedules_to_csv, "load": load_schedules_from_csv, "usage": print_usage, "?": print_usage}
+
+while True:
+    filename = None
+    filepath = None
+    print ("~*~*\tPRODUCTION SCHEDULER\t*~*~")
+    print ("Type ? for help ")
+        
+    action = input(">: ");
+    action = (action.strip()).split(' ') # parse input
+        
+    func = funcs.get(action[0], invalid) # calls action[0]() if found and invalid if not
+    if func == 'save_to_csv' or 'load_from_csv':
+        if len(action) < 2:
+            print_usage()
+        else:
+            filename = action[1]
+            if len(action) == 3:
+                filepath = action[2]
+            func(filename, filepath) # filename, filepath
 
 
     
