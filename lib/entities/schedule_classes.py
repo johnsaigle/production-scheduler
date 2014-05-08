@@ -31,7 +31,12 @@ class Schedule:
         print(sorted(self.runs, key=lambda run: run.line))
 
     def print_runs_by_date(self):
-        print(sorted(self.runs, key=lambda run: run.date))
+        runs_by_date = sorted(self.runs, key=lambda run: run.date))
+        for run in runs_by_date
+            print run.to_pretty_string()
+
+    def to_pretty_string(self):
+        return "Date: " + date +". "+len(runs) +" runs recorded."
 
 class Run:
     """A series of batches to be produced in one day"""
@@ -44,11 +49,12 @@ class Run:
       if (batch.product in line.products) and (batch.pallette in line.pallettes):
         self.batches.add(batch)
       else:
-        print "Error: {product} on {pallette} incompatible with {line}".format(product=batch.product.name, pallette=batch.pallette, line=line.name)
+        print ("Error: {product} on {pallette} incompatible with {line}").format(product=batch.product.name, pallette=batch.pallette, line=line.name)
 
     def is_total_correct(self):
         summed_total = 0
-        summed_total = summed_total + batch.expected_quantity for batch in batches
+        for batch in batches:
+            summed_total = summed_total + batch.expected_quantity 
              
         if (summed_total != self.expected_total):
             print ("Summed total does not meet expected total")
@@ -57,7 +63,10 @@ class Run:
         else:
             return True
 
-    def pretty_print_batches(self):
+    def to_pretty_string(self):
+        return self.date + " -- " +len(self.batches) + " batches recorded"
+
+    def print_all_batches(self):
         for b in self.batches:
             print (b.to_pretty_string())
 
@@ -71,3 +80,7 @@ class Batch:
     #returns a string for nice output and for csv writing
     def to_pretty_string(self):
         return ", ".join([product.to_pretty_string(), self.pallette, self.expected_quantity])
+
+    def to_csv_string(self):
+        return ",".join([product.to_pretty_string(), self.pallette, self.expected_quantity])
+

@@ -34,7 +34,7 @@ if __name__=='__main__':
       print ("~*~*\tPRODUCTION SCHEDULER\t*~*~")
       print ("Type ? for help ")
           
-      action = input(">: ")
+      action = input(">: ");
       action = (action.strip()).split(' ') # parse input
           
 ##      if func == 'save_to_csv' or 'load_from_csv':
