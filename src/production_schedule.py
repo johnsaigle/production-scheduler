@@ -53,11 +53,12 @@ class Batch:
 Represents one type of product produced in a batch on some Line
 """
 class Product:
-    def __init__(self, brand, viscosity=None, dimension=None, base_unit=None, ):
+    def __init__(self, brand, kind, size, pallette_type, base_unit):
         self.brand = brand
+        self.kind = kind # placeholder for what the product is -- can be oil visocosity, ATF (automatic transmission fluid, PSF (powersteering fluid etc 
+        self.size = size # products per pallette
+        self.pallette_type = pallette_type
         self.base_unit = base_unit
-        self.viscosity = viscosity
-        self.dimension = dimension
 
     #returns a string for nice output and for csv writing
     def to_pretty_string(self):
