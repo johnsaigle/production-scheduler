@@ -1,3 +1,4 @@
+#Note: change all to_pretty_string to __repr__
 class Product:
   """Represents one type of product produced in a batch on some Line"""
   def __init__(self, brand, kind, size, base_unit=None):
@@ -10,8 +11,12 @@ class Product:
   def to_pretty_string(self):
       return ", ".join([self.brand, self.kind, self.size])
 
-  def to_csv_string(self):
-      return ",".join([self.brand, self.kind, self.size])
+  def as_list(self):
+      to_return = []
+      to_return.append(self.brand)
+      to_return.append(self.kind)
+      to_return.append(self.size)
+      return to_return                            
 
 class Line:
   """Represents one production line in the plant"""

@@ -14,7 +14,7 @@ def load_from_csv(filepath):
 def build_lines():
   """Construct the production lines based on data csv data info"""
   production_lines = []
-  production_line_information = load_from_csv('C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\lines\\lines.csv')
+  production_line_information = load_from_csv('C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\raw\\lines\\lines.csv')
   print (os.getcwd())
   print (production_line_information)
   for row in production_line_information:
@@ -25,7 +25,7 @@ def build_lines():
     production_lines.append(line) 
     # Add product info
     product_source_name = line_name + '.csv'
-    product_info = load_from_csv('C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\products\\'+product_source_name)
+    product_info = load_from_csv('C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\raw\\products\\'+product_source_name)
     line.populate_product_list(product_info)
     #Add pallette info
     i = 1
