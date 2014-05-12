@@ -1,53 +1,23 @@
 #!/usr/bin/python
-import sys
 import datetime
-import os
-##sys.path.append('../')
-from lib.entities import *
+import sys
+from lib.entities import schedule_classes
 from lib.loaders import *
-
-def convert_lazy_date(date_as_list):
-    """Cleans up date format -- doesn't work for some dates of length 7"""
-    if len(date) == 8:
-        return "".join(date_as_list)
-
-    date_as_list[-2:-2] = ['2','0'] #adds 20 to the place of the year
-    if len(date_as_list) == 6:
-        date_as_list.insert(1,'0')
-        date_as_list.insert(0,'0')
-
-    elif len(date_as_list) == 7:
-      # either day or month is double digited
-      i = date_as_list.index('0') # find first '0'
-      if (i == 0):
-          date_as_list.insert(2,'0')
-      elif (i == 2):
-        date_as_list.insert(0,'0')
-
-    date = "".join(date_as_list)
-    if len(date) == 8:
-        return date
-    else:
-        print ("Error, date is not size 8")
-        return False
   
 def new_schedule_menu():
-    date = list(input("Enter the date: ")) # convert date input to individual chars
-    date = convert_lazy_date(date)
-    if not date:
-        print ("Conversion failed")
-        return 1
-      
-    date = datetime.datetime.strptime(date, '%d%m%y').strftime('%d/%m/%y')
-    s = Schedule(date)
+    sched_date = input("Enter the date: ") # convert date input to individual chars
+    sched_date = datetime.datetime.strptime(sched_date, '%d%m%y').strftime('%d/%m/%y')
+    s = schedule_classes.Schedule(sched_date)
     current_schedule = s
-    schedules.add(s)
+    schedules.append(s)
+    print
 
 def new_run_menu():
   if current_schedule:
       print ("\n1) Add to current schedule")
       print ("2) Select schedule")
-      choice = input(">: ")
+      print ("0) Main menu")
+      choice = input(">(S-{schedule_date}): ".format(schedule_date=current_schedule.date))
       if choice == 'y' or choice == '1':
           if not current_line:
               print ("Select line: ")
@@ -64,6 +34,7 @@ def new_batch_menu():
       print ("\n1) Add to current run")
       print ("2) Select run from current schedule")
       print ("3) Select different schedule")
+      print ("0) Main menu")
       print ("Current run: "+current_run.date +". Current schedule: " +current_schedule.date+".\n")
       choice = input(">: ")
       if choice == 'y' or choice == '1':
@@ -82,8 +53,16 @@ def new_batch_menu():
           print ("TODO")
           return False
       else:
-          print ("Invalid input. Returning...")
-          return False
+          invalid()
+
+def init_data():
+    print ('TODO')
+
+def save_to_excel():
+    print ('TODO')
+
+def save_raw():
+    print ('TODO')
     
 def print_main_prompt_menu():
     print ("Entity Builder~")
@@ -95,6 +74,16 @@ def print_main_prompt_menu():
     print ("6) Save raw (not formatted for excel)")
     print ("0) Quit\n")
 
+def invalid():
+    print ("Input invalid.")
+    
+funcs = {   1: new_schedule_menu,
+            2: new_run_menu,
+            3: new_batch_menu,
+            4: init_data,
+            5: save_to_excel,
+            6: save_raw
+        }
 production_lines = []
 schedules =[]
 current_schedule = None
@@ -104,10 +93,16 @@ choice = 1
 while not choice == '0':
     print_main_prompt_menu()
     choice = input('>: ')
+    if not len(choice) == 1: #not a valid size
+        invalid()
+        continue
     choice = int(choice.strip()) # remove white space and convert to int
-    if choice == 1:
-        print("TODO: Link functions to menu")
+    if choice == 0:
+        sys.exit()
     else:
-        print("Please make a valid selection")
+        try:
+            funcs[choice]() # execute the chosen function based on funcs dictionary
+        except KeyError:
+            invalid()
     
         

@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import csv
-import sys
 from lib.entities import schedule_classes 
 from lib.loaders import scheduler_loader as s_loader
 from lib.loaders import entity_loader as e_loader

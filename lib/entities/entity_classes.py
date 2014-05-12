@@ -1,6 +1,6 @@
 class Product:
   """Represents one type of product produced in a batch on some Line"""
-  def __init__(self, brand, kind, size, base_unit):
+  def __init__(self, brand, kind, size, base_unit=None):
       self.brand = brand
       self.kind = kind # placeholder for what the product is -- can be oil visocosity, ATF (automatic transmission fluid, PSF (powersteering fluid etc 
       self.size = size # products per pallette
@@ -8,27 +8,38 @@ class Product:
 
     #returns a string for nice output
   def to_pretty_string(self):
-      return ", ".join([self.brand, self.kind, self.brand, self.size])
+      return ", ".join([self.brand, self.kind, self.size])
 
   def to_csv_string(self):
-      return ",".join([self.brand, self.kind, self.size, self.base_unit])
+      return ",".join([self.brand, self.kind, self.size])
 
 class Line:
   """Represents one production line in the plant"""
-  def __init__(self, name, products, pallettes):
+  def __init__(self, name):
       self.name = name
-      self.products = products # a list of products packaged by this line
-      self.pallettes = pallettes # an enum type represeting the pallette type for this line
+      self.products = [] # a list of products packaged by this line
+      self.pallettes = [] # an enum type represeting the pallette type for this line
 
-  def populate_product_list(valid_products):
-      for product in products:
-          add_new_product_to_list(product)
+  def add_new_product_to_list(self, product_as_csv_list):
+      if len(product_as_csv_list) > 2:
+        new_product = Product(product_as_csv_list[0], product_as_csv_list[1], product_as_csv_list[2])
+        self.products.append(new_product)
+        print (new_product.to_pretty_string() + " added.")
+      else:
+        print ("Error with product creation. Passed list is too small")
 
-  def add_new_product_to_list(product_as_csv_formatted_string):
-      params = product_as_csv_formatted_string.split(',')
-      products.add(Product(params[0], params[1], params[2]))
+  def populate_product_list(self, valid_products):
+      for product in valid_products:
+          self.add_new_product_to_list(product)
 
-  def populate_pallette_list(valid_pallettes_as_csv_formatted_string):
-      pallettes = valid_pallettes_as_csv_formatted_string.split(',')
+  def add_new_pallette(self, pallette):
+      self.pallettes.append(pallette)
+
+  def print_products(self):
+    for p in self.products:
+      print (p.to_pretty_string())
+
+  def to_pretty_string(self):
+      return self.name + ". "+str(len(self.products)) +" products produced."
 
     

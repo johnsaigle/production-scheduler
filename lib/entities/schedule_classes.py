@@ -69,7 +69,7 @@ class Run:
             print (b.to_pretty_string())
 
 class Batch:
-  """ The quantity and production of some product in the plant"""
+    """ The quantity and production of some product in the plant"""
     def __init__(self, product, pallette, expected_quantity):
         self.product = product
         self.pallette = pallette # the pallette type used for this batch
