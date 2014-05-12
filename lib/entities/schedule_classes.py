@@ -27,13 +27,11 @@ class Schedule:
             print (run.to_pretty_string()) #
             print ("")
 
-    def print_runs_by_line(self):
-        print(sorted(self.runs, key=lambda run: run.line))
+    def runs_by_line(self):
+        return sorted(self.runs, key=lambda run: run.line)
 
-    def print_runs_by_date(self):
-        runs_by_date = sorted(self.runs, key=lambda run: run.date))
-        for run in runs_by_date
-            print run.to_pretty_string()
+    def runs_by_date(self):
+        return sorted(self.runs, key=lambda run: run.date)
 
     def to_pretty_string(self):
         return "Date: " + date +". "+len(runs) +" runs recorded."

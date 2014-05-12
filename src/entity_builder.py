@@ -1,12 +1,16 @@
 #!/usr/bin/python
 import sys
 import datetime
-sys.path.append('../')
+import os
+##sys.path.append('../')
 from lib.entities import *
 from lib.loaders import *
 
 def convert_lazy_date(date_as_list):
     """Cleans up date format -- doesn't work for some dates of length 7"""
+    if len(date) == 8:
+        return "".join(date_as_list)
+
     date_as_list[-2:-2] = ['2','0'] #adds 20 to the place of the year
     if len(date_as_list) == 6:
         date_as_list.insert(1,'0')
@@ -66,6 +70,7 @@ def new_batch_menu():
           # add the new batch to the current run
           print ("TODO")
       elif choice == 'n' or choice == '2':
+          # select different run
             runs_by_date = current_schedule.runs_by_date()
             paired = zip(range(1, len(current_schedule.runs)+1), runs_by_date)
             for pair in paired:   
@@ -73,6 +78,7 @@ def new_batch_menu():
             selection = int(input("Enter index: "))
             current_run = runs_by_date[selection]
       elif choice == '3':
+          # select different schedule
           print ("TODO")
           return False
       else:

@@ -1,9 +1,9 @@
 #!/usr/bin/python
 import csv
 import sys
-sys.path.append('../')
-from lib.entities import *
-from lib.loaders import *
+from lib.entities import schedule_classes 
+from lib.loaders import scheduler_loader as s_loader
+from lib.loaders import entity_loader as e_loader
 
 def print_usage():
     """A manual displaying the usage of functions for this program"""
@@ -16,11 +16,6 @@ def print_usage():
 
 def invalid():
     print ("Bad function name. Try %s" % (", ".join(funcs.keys())))
-
-def init_data():
-    with open('data.csv', newline='') as csvfile:
-        datareader = csv.reader(csvfile, delimiter=',', quotechar='|')
-        production_lines = next(datareader) # first row in csv is the name of the product lines
 
 # MAIN PART
 if __name__=='__main__':
