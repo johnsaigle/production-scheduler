@@ -1,21 +1,12 @@
 import os
 import csv
 from lib.entities import entity_classes
-
-def load_from_csv(filepath):
-  """ Creates a csv-formatted list representing name and pallette info for a line"""
-  rows_to_return = []
-  with open(filepath, newline='') as csvfile:
-     reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-     for row in reader:
-       rows_to_return.append(row)
-  return rows_to_return
+from . import csv_loader
 
 def build_lines():
   """Construct the production lines based on data csv data info"""
   production_lines = []
-  production_line_information = load_from_csv('C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\raw\\lines\\lines.csv')
-  print (os.getcwd())
+  production_line_information = csv_loader.load_csv_info('C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\raw\\lines\\lines.csv')
   print (production_line_information)
   for row in production_line_information:
     pallettes = []
