@@ -8,3 +8,8 @@ def load_csv_info(filepath):
      for row in reader:
        rows_to_return.append(row)
   return rows_to_return
+
+def save_csv_info(filepath, formatted_data):
+  with open(filepath, 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(formatted_data)

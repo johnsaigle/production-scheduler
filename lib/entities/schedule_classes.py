@@ -3,26 +3,16 @@ from operator import attrgetter
 
 class Schedule:
     """Represents the production scheule for one day, projected three weeks in the future across various lines"""
-    def __init__(self, date):
+    def __init__(self, date, line_names):
       self.runs = {}
       self.date = date # the date the schedule was created by the system
       
-    def add_run(self, run):
-        if (run.date not in self.runs):
-            self.runs[run.date] = run
+    def add_run(self, line_name, run):
+        if line_name not in self.runs:
+            self.runs[line_name] = []
+            self.runs[line_name].append(run)
         else:
-            print ("There is an existing run for date {date}. Delete existing run first or use modify.".format(date=run.date))
-
-    def del_run(self, run):
-        del self.runs[run.date]
-
-    #Edits existing run or adds it to runs dictionary if it does not exist
-    def modify_run(self, run):
-        if(int(run.date) not in self.runs):
-            print ("Run added")
-
-        self.runs[run.date] = run
-
+            self.runs[line_name].append(run)        
     # A string representation of all runs on the line
     def print_all_runs(self):
         for run in self.runs:
@@ -30,23 +20,20 @@ class Schedule:
             print (run.to_pretty_string()) #
             print ("")
 
-    def runs_by_line(self):
-        return sorted(self.runs, key=lambda run: run.line)
-
     def runs_by_date(self):
-        return sorted(self.runs, key=lambda run: run.date)
-
-    def runs_by_line_then_date(self):
-        return sorted(self.runs.values(), key=attrgetter('line', 'date'))
-
+        runs_to_return = []
+        # iterate over all runs and return them sorted by line, then date
+        for key in d:
+            runs_to_return.extend(sorted(self.runs[key], key=lambda run: run.date))
+        return runs_to_return
+    
     def to_pretty_string(self):
         return "Date: " + date +". "+len(runs) +" runs recorded."
 
 class Run:
     """A series of batches to be produced in one day"""
-    def __init__(self, line, date, expected_total):
+    def __init__(self, date, expected_total):
         self.batches = []
-        self.line = line
         self.expected_total = expected_total # as calculated in the production schedule by SAP
         self.date = date # the day of manufacture
     
