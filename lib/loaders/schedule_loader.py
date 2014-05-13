@@ -43,26 +43,3 @@ def build_schedule_from_csv(filepath, date, production_lines):
             else:
                 # There is an entry for this date, but not for this line. New entry
                 print ("TODO")
-                
-#create dummy object to test functionality
-s = schedule_classes.Schedule("05122014", ['BF713', 'BF911'])
-print(s)
-l = entity_classes.Line("BF713")
-r = schedule_classes.Run("01012014", 1000)
-r2 = schedule_classes.Run("02052014", 250)
-print (r)
-print (r2)
-p = entity_classes.Product("Du", "5W50", "1*5")
-print (p)
-b = schedule_classes.Batch(p, "mypallette", 1000)
-print (b)
-b2 = schedule_classes.Batch(p, "myotherpallette", 50)
-print (b2)
-b3 = schedule_classes.Batch(p, "anotherpallette", 999)
-print (b3)
-s.add_run('BF713', r)
-s.add_run('BF911', r2)
-r.add_batch(b)
-r.add_batch(b2)
-r2.add_batch(b3)
-save_schedule_to_csv(s)
