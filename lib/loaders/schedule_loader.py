@@ -33,30 +33,40 @@ def build_schedule_from_csv(filepath):
     """Loads a production schedule from a csv file"""
     rows_to_read = []
     runs_to_load = []
-    production_batch_info = csv_loader.load_csv_info(filepath)
-    # Now we have a list of batches with the line and date as the first two elements of each row
-    date = os.path.basename(filepath).rstrip(".csv") #get date from file name
-    s_to_return = schedule_classes.Schedule(date)
-    for row in production_batch_info: # each line represents a batch
-        if not len(row) == 8:
-            continue
-        # according to csv save format:
-        line_name = row[0]
-        run_date = row[1]
-        run_total = row[2]
-        product_name = row[3]
-        product_kind = row[4]
-        product_size = row[5]
-        batch_pallette = row[6]
-        batch_qty = row[7]
+    try: 
+        production_batch_info = csv_loader.load_csv_info(filepath)
+        # Now we have a list of batches with the line and date as the first two elements of each row
+        date = os.path.basename(filepath).rstrip(".csv") #get date from file name
+        s_to_return = schedule_classes.Schedule(date)
+        for row in production_batch_info: # each line represents a batch
+            if not len(row) == 8:
+                continue
+            # according to csv save format:
+            line_name = row[0]
+            run_date = row[1]
+            run_total = row[2]
+            product_name = row[3]
+            product_kind = row[4]
+            product_size = row[5]
+            batch_pallette = row[6]
+            batch_qty = row[7]
 
-        p = entity_classes.Product(product_name, product_kind, product_size)
-        b = schedule_classes.Batch(p, batch_pallette, batch_qty)
-        r = schedule_classes.Run(run_date, run_total)
-        r.add_batch(b)
-        s_to_return.add_run(line_name, r)
+            # build and assemble constituent pieces of the schedule
+            p = entity_classes.Product(product_name, product_kind, product_size)
+            b = schedule_classes.Batch(p, batch_pallette, batch_qty)
+            r = schedule_classes.Run(run_date, run_total)
+            r.add_batch(b)
+            s_to_return.add_run(line_name, r)
 
-    return s_to_return
+        return s_to_return
+    except Exception:
+        return None
 
-def build_multiple_schedules(schedule_list, directory_path):
-    print ("TODO")
+def build_multiple_schedules(schedule_names, directory_path):
+    to_return = []
+    for s in schedule_names:
+        s_filepath = directory_path + s + '.csv'
+        s_to_add = build_schedule_from_csv(s_filepath)
+        if not s_to_add == None:
+            to_return.append(s_to_add)
+    return to_return

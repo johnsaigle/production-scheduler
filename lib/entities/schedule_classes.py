@@ -1,4 +1,5 @@
 from operator import attrgetter
+import datetime
 # Note: 'toprettystring' functions should be changed to __repr__
 
 class Schedule:
@@ -6,12 +7,31 @@ class Schedule:
     def __init__(self, date):
       self.runs = {}
       self.date = date # the date the schedule was created by the system
+                       # dates are strings (convenience with file reading/writing)
+      self.dateobj = datetime.datetime.strptime(self.date, "%Y-%m-%d")
       
     def add_run(self, line_name, run):
+        if run.dateobj < self.dateobj or (run.dateobj > self.dateobj+datetime.timedelta(days=7)):
+            print("Bad run date (out of range)")
+            print("Run date: {0}. Schedule date: {1}".format(run.date, schedule.date))
+            return False
         if line_name not in self.runs:
-            self.runs[line_name] = []
-            self.runs[line_name].append(run)
+            if len(self.runs) >= 3:
+                print ("Error -- too many production lines. Rejecting addition.")
+                return False
+            else:
+                self.runs[line_name] = []
+                self.runs[line_name].append(run)
         else:
+            if (len(self.runs[line_name]) >= 7):
+                print("There are already seven entries for {0}".format(line_name))
+                for r in self.runs[line_name]:
+                    print (r.to_pretty_string())
+                return False
+            for r in self.runs[line_name]:
+                if run.date == r.date:
+                    print ("Run already exists.")
+                    return False
             self.runs[line_name].append(run)        
     # A string representation of all runs on the line
     def print_all_runs(self):
@@ -32,10 +52,11 @@ class Schedule:
 
 class Run:
     """A series of batches to be produced in one day"""
-    def __init__(self, date, expected_total):
+    def __init__(self, date, expected_total=None):
         self.batches = []
         self.expected_total = expected_total # as calculated in the production schedule by SAP
         self.date = date # the day of manufacture
+        self.dateobj = datetime.datetime.strptime(self.date, "%Y-%m-%d")
     
     def add_batch(self, batch):
         if batch in self.batches:

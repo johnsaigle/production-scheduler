@@ -16,7 +16,7 @@ def build_lines():
     production_lines.append(line) 
     # Add product info
     product_source_name = line_name + '.csv'
-    product_info = load_from_csv('C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\raw\\products\\'+product_source_name)
+    product_info = csv_loader.load_csv_info('C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\raw\\products\\'+product_source_name)
     line.populate_product_list(product_info)
     #Add pallette info
     i = 1
