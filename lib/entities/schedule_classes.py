@@ -3,7 +3,7 @@ from operator import attrgetter
 
 class Schedule:
     """Represents the production scheule for one day, projected three weeks in the future across various lines"""
-    def __init__(self, date, line_names):
+    def __init__(self, date):
       self.runs = {}
       self.date = date # the date the schedule was created by the system
       
@@ -38,8 +38,10 @@ class Run:
         self.date = date # the day of manufacture
     
     def add_batch(self, batch):
-     # if (batch.product in line.products) and (batch.pallette in line.pallettes):
-        self.batches.append(batch)
+        if batch in self.batches:
+            print ("Run already contains batch.")  
+        else:
+            self.batches.append(batch)
      # else:
       #  print ("Error: {product} on {pallette} incompatible with {line}").format(product=batch.product.name, pallette=batch.pallette, line=line.name)
 

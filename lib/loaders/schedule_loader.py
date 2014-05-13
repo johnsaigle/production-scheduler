@@ -4,7 +4,10 @@ from lib.loaders import csv_loader
 import copy
 import csv
 
-def save_schedule_to_csv(schedule):
+import os
+import sys
+
+def save_schedule_to_csv(schedule, filepath):
     """Saves a schedule to a csv file"""
     rows_to_write = []
     sch = copy.deepcopy(schedule) # copy the passed schedule for encapsulation
@@ -15,31 +18,45 @@ def save_schedule_to_csv(schedule):
                 col_values = []
                 col_values.append(line_name)
                 col_values.append(r.date)
+                col_values.append(r.expected_total)
                 col_values.extend(b.as_list())
                 rows_to_write.append(col_values)
     filepath = 'C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\schedules\\'+sch.date +'.csv'
     csv_loader.save_csv_info(filepath, rows_to_write)
     
 def save_multiple_schedules(schedules):
-    """Saves a batch of schedules.Each schedule is given an individual file"""
+    """Saves a batch of schedules. Each schedule is given an individual file"""
     for s in schedules:
         save_schedule_to_csv(s)
 
-def build_schedule_from_csv(filepath, date, production_lines):
+def build_schedule_from_csv(filepath):
     """Loads a production schedule from a csv file"""
     rows_to_read = []
     runs_to_load = []
     production_batch_info = csv_loader.load_csv_info(filepath)
     # Now we have a list of batches with the line and date as the first two elements of each row
-    s_to_return = Schedule(date)
-    for row in production_batch_info:
+    date = os.path.basename(filepath).rstrip(".csv") #get date from file name
+    s_to_return = schedule_classes.Schedule(date)
+    for row in production_batch_info: # each line represents a batch
+        if not len(row) == 8:
+            continue
+        # according to csv save format:
         line_name = row[0]
         run_date = row[1]
-        if run_date in s.runs: # the run exists in the schedule's dictionary
-            this_run = s.runs[run.date]
-            if this_run.line.name == line_name:
-                # Match: add batch info to this run
-                print ("TODO")
-            else:
-                # There is an entry for this date, but not for this line. New entry
-                print ("TODO")
+        run_total = row[2]
+        product_name = row[3]
+        product_kind = row[4]
+        product_size = row[5]
+        batch_pallette = row[6]
+        batch_qty = row[7]
+
+        p = entity_classes.Product(product_name, product_kind, product_size)
+        b = schedule_classes.Batch(p, batch_pallette, batch_qty)
+        r = schedule_classes.Run(run_date, run_total)
+        r.add_batch(b)
+        s_to_return.add_run(line_name, r)
+
+    return s_to_return
+
+def build_multiple_schedules(schedule_list, directory_path):
+    print ("TODO")
