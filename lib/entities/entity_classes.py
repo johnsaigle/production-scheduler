@@ -45,6 +45,6 @@ class Line:
       print (p.to_pretty_string())
 
   def to_pretty_string(self):
-      return self.name + ". "+str(len(self.products)) +" products produced."
+      return self.name + ". "+str(len(self.products)) +" products. " +str(len(self.pallettes)) + " pallettes."
 
     

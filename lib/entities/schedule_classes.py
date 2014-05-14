@@ -8,37 +8,41 @@ class Schedule:
       self.runs = {}
       self.date = date # the date the schedule was created by the system
                        # dates are strings (convenience with file reading/writing)
-      self.dateobj = datetime.datetime.strptime(self.date, "%Y-%m-%d")
       
-    def add_run(self, line_name, run):
-        if run.dateobj < self.dateobj or (run.dateobj > self.dateobj+datetime.timedelta(days=7)):
+    def add_run(self, line_name, run_to_add):
+        # check that the run date is within one week of the schedule date
+        run_date = datetime.datetime.strptime(run_to_add.date, "%Y-%m-%d")
+        self_date = datetime.datetime.strptime(self.date, "%Y-%m-%d")
+        if run_date < self_date or (run_date > self_date+datetime.timedelta(days=7)):
             print("Bad run date (out of range)")
-            print("Run date: {0}. Schedule date: {1}".format(run.date, schedule.date))
+            print("Run date: {0}. Schedule date: {1}".format(run_to_add.date, self.date))
             return False
+        # if there's no info for this line
+        print("Passed date check")
         if line_name not in self.runs:
+            print("At name check")
             if len(self.runs) >= 3:
                 print ("Error -- too many production lines. Rejecting addition.")
                 return False
             else:
                 self.runs[line_name] = []
-                self.runs[line_name].append(run)
-        else:
-            if (len(self.runs[line_name]) >= 7):
-                print("There are already seven entries for {0}".format(line_name))
-                for r in self.runs[line_name]:
-                    print (r.to_pretty_string())
-                return False
-            for r in self.runs[line_name]:
-                if run.date == r.date:
-                    print ("Run already exists.")
+                self.runs[line_name].append(run_to_add)
+                print("Added new run to new line")
+        elif len(self.runs[line_name]) > 0:
+                # we want only seven runs per schedule
+                if (len(self.runs[line_name]) >= 7):
+                    print("There are already seven entries for {0}".format(line_name))
+                    self.print_all_runs()
                     return False
-            self.runs[line_name].append(run)        
-    # A string representation of all runs on the line
-    def print_all_runs(self):
-        for run in self.runs:
-            print (run.date.isoformat()) # gives a string with YYYY-MM-DD
-            print (run.to_pretty_string()) #
-            print ("")
+                else:
+                    for extant_run in self.runs[line_name]:
+                        if run_to_add.date == extant_run.date and run_to_add.expected_total == extant_run.expected_total:
+                        
+                            # same run. merge batches.
+                            if len(run_to_add.batches) > 0:
+                                extant_run.batches.extend(run_to_add.batches)
+                            return True
+                    self.runs[line_name].append(run_to_add)        
 
     def runs_by_date(self, line = None):
         """Returns a list of the runs sorted by date. If line is none, sorts over all lines"""
@@ -51,24 +55,43 @@ class Schedule:
             runs_to_return.extend(sorted(self.runs[line.name], key=lambda run: run.date))
         return runs_to_return
 
+    def print_all_runs(self):
+        for line in self.runs:
+            print(line)
+            for r in self.runs[line]:
+                print("- "+r.to_pretty_string())
+            
+    def print_all_runs_with_batches(self):
+        for line in self.runs:
+            print(line)
+            for r in self.runs[line]:
+                print("- "+r.to_pretty_string())
+                r.print_all_batches()
+
     def next_run_date(self, line):
         try:
             runs = self.runs_by_date(line)
-            last_date_used = runs[len(runs)-1].dateobj #the last date is the most recent
+            last_date_used_string = runs[len(runs)-1].date #the last date is the most recent        
+            last_date_used = datetime.datetime.strptime(last_date_used_string, "%Y-%m-%d")
             run_date = last_date_used + datetime.timedelta(days=1)
             # we don't want to create schedules for weekends
             while run_date.isoweekday() > 5:
                 run_date += datetime.timedelta(days=1)
-            date_to_return = run_date.isoformat() # return next available date as string
+            date_to_return = run_date.strftime("%Y-%m-%d") # return next available date as string
         except KeyError:
-            print("No runs for "+line.name+". Using date for current schedule.")
-            return self.date # already in iso format
-            date_to_return = self.dateobj.isoformat()
-        print ("From sched function"+date_to_return)
+            print("No runs initialized for "+line.name+". Using date for current schedule.")
+            date_to_return = self.date # already in correct format
         return date_to_return
+
+    def get_total_runs(self):
+        total = 0
+        for line in self.runs:
+            for run in self.runs[line]:
+                total += 1
+        return total
     
     def to_pretty_string(self):
-        return "Date: " + self.date +". "+str(len(self.runs)) +" runs recorded."
+        return "Date: " + self.date +". "+str(self.get_total_runs()) +" runs recorded."
 
 class Run:
     """A series of batches to be produced in one day"""
@@ -76,7 +99,6 @@ class Run:
         self.batches = []
         self.expected_total = expected_total # as calculated in the production schedule by SAP
         self.date = date # the day of manufacture
-        self.dateobj = datetime.datetime.strptime(self.date, "%Y-%m-%d")
     
     def add_batch(self, batch):
         if batch in self.batches:
@@ -103,7 +125,7 @@ class Run:
 
     def print_all_batches(self):
         for b in self.batches:
-            print (b.to_pretty_string())
+            print ("--- "+b.to_pretty_string())
 
 class Batch:
     """ The quantity and production of some product in the plant"""
@@ -114,10 +136,10 @@ class Batch:
 
     #returns a string for nice output and for csv writing
     def to_pretty_string(self):
-        return ", ".join([self.product.to_pretty_string(), self.pallette, self.expected_quantity])
+        return ", ".join([self.product.to_pretty_string(), self.pallette, str(self.expected_quantity)])
 
     def to_csv_string(self):
-        return ",".join([self.product.to_pretty_string(), self.pallette, self.expected_quantity])
+        return ",".join([self.product.to_pretty_string(), self.pallette, str(self.expected_quantity)])
 
     def as_list(self):
         to_return = []

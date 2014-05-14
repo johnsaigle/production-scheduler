@@ -24,10 +24,10 @@ def save_schedule_to_csv(schedule, filepath):
     filepath = 'C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\schedules\\'+sch.date +'.csv'
     csv_loader.save_csv_info(filepath, rows_to_write)
     
-def save_multiple_schedules(schedules):
+def save_multiple_schedules(schedules, directorypath):
     """Saves a batch of schedules. Each schedule is given an individual file"""
     for s in schedules:
-        save_schedule_to_csv(s)
+        save_schedule_to_csv(s, directorypath + s.date +'.csv')
 
 def build_schedule_from_csv(filepath):
     """Loads a production schedule from a csv file"""
@@ -35,11 +35,13 @@ def build_schedule_from_csv(filepath):
     runs_to_load = []
     try: 
         production_batch_info = csv_loader.load_csv_info(filepath)
+        if (production_batch_info == None):
+            return
         # Now we have a list of batches with the line and date as the first two elements of each row
         date = os.path.basename(filepath).rstrip(".csv") #get date from file name
         s_to_return = schedule_classes.Schedule(date)
         for row in production_batch_info: # each line represents a batch
-            if not len(row) == 8:
+            if not len(row) == 8: # bad format
                 continue
             # according to csv save format:
             line_name = row[0]
@@ -60,6 +62,7 @@ def build_schedule_from_csv(filepath):
 
         return s_to_return
     except Exception:
+        print ("An error occurred while building schedule from file " +os.path.basename(filepath))
         return None
 
 def build_multiple_schedules(schedule_names, directory_path):
