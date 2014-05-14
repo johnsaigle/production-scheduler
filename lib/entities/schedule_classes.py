@@ -40,15 +40,35 @@ class Schedule:
             print (run.to_pretty_string()) #
             print ("")
 
-    def runs_by_date(self):
+    def runs_by_date(self, line = None):
+        """Returns a list of the runs sorted by date. If line is none, sorts over all lines"""
         runs_to_return = []
         # iterate over all runs and return them sorted by line, then date
-        for key in d:
-            runs_to_return.extend(sorted(self.runs[key], key=lambda run: run.date))
+        if line == None:
+            for key in self.runs:
+                runs_to_return.extend(sorted(self.runs[key], key=lambda run: run.date))
+        else:
+            runs_to_return.extend(sorted(self.runs[line.name], key=lambda run: run.date))
         return runs_to_return
+
+    def next_run_date(self, line):
+        try:
+            runs = self.runs_by_date(line)
+            last_date_used = runs[len(runs)-1].dateobj #the last date is the most recent
+            run_date = last_date_used + datetime.timedelta(days=1)
+            # we don't want to create schedules for weekends
+            while run_date.isoweekday() > 5:
+                run_date += datetime.timedelta(days=1)
+            date_to_return = run_date.isoformat() # return next available date as string
+        except KeyError:
+            print("No runs for "+line.name+". Using date for current schedule.")
+            return self.date # already in iso format
+            date_to_return = self.dateobj.isoformat()
+        print ("From sched function"+date_to_return)
+        return date_to_return
     
     def to_pretty_string(self):
-        return "Date: " + date +". "+len(runs) +" runs recorded."
+        return "Date: " + self.date +". "+str(len(self.runs)) +" runs recorded."
 
 class Run:
     """A series of batches to be produced in one day"""
@@ -79,7 +99,7 @@ class Run:
             return True
 
     def to_pretty_string(self):
-        return self.date + " -- " +len(self.batches) + " batches recorded"
+        return self.date + " -- " +str(len(self.batches)) + " batches recorded"
 
     def print_all_batches(self):
         for b in self.batches:
@@ -94,10 +114,10 @@ class Batch:
 
     #returns a string for nice output and for csv writing
     def to_pretty_string(self):
-        return ", ".join([product.to_pretty_string(), self.pallette, self.expected_quantity])
+        return ", ".join([self.product.to_pretty_string(), self.pallette, self.expected_quantity])
 
     def to_csv_string(self):
-        return ",".join([product.to_pretty_string(), self.pallette, self.expected_quantity])
+        return ",".join([self.product.to_pretty_string(), self.pallette, self.expected_quantity])
 
     def as_list(self):
         to_return = []
