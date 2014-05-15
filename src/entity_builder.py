@@ -38,6 +38,8 @@ def select_schedule():
     """Select the global current schedule"""
     global current_schedule
     global schedules
+    global current_run
+    global current_line
     if len(schedules) < 1:
         print ("No schedules initialized.")
         print("Creating new schedule.")
@@ -48,6 +50,8 @@ def select_schedule():
         selection= int(input("Select schedule: "))
         current_schedule = schedules[selection]
     print ("Current schedule: " +current_schedule.to_pretty_string())
+    current_run = None
+    current_line = None
 
 def select_run():
     """Select the global current run"""
@@ -93,12 +97,16 @@ def new_auto_schedule():
     global fridays
     global unused_fridays
     global current_schedule
+    global current_run
+    global current_line
     free_date = fridays[next_free_date_index(unused_fridays)]
     s = schedule_classes.Schedule(free_date)
     mark_date_as_used(free_date)
     current_schedule = s
     schedules.append(current_schedule)
     print ("Schedule created for {0}".format(current_schedule.date))
+    current_line = None
+    current_run = None
 
 def new_manual_schedule():
     """Initialize a schedule by typing in the date in the format YYY-MM-DD"""
@@ -118,6 +126,8 @@ def new_manual_schedule():
     current_schedule = man_s
     schedules.append(current_schedule)
     print ("Manual schedule created for {0}".format(current_schedule.date))
+    current_line = None
+    current_run = None
 
 def new_run():
     global current_run
@@ -170,10 +180,8 @@ def new_batch():
     if not current_line:
         select_line()
     if not current_run:
-        if len(current_schedule.runs[current_line.name] < 1):
-            new_run()
-        else:
-            print ("No current run.")
+        print ("No current run.")
+        if current_line in current_schedule.runs and len(current_schedule.runs[current_line]) > 0:
             print ("0 -- Select run from current schedule")
             print ("1 -- Create new run")
             while True:
@@ -184,6 +192,8 @@ def new_batch():
                 elif selection == 1:
                     new_run()
                     break
+        else:
+            new_run()
     print("\nAll necessary data successfully initialized:")
     print("Schedule "+current_schedule.to_pretty_string())     
     print("Selected line is "+current_line.name + ". Run date " + current_run.date)
@@ -195,6 +205,8 @@ def new_batch():
         p_list = []
         while True:
             short_code = input("Enter short name (first two letters of brand): ")
+            if short_code == 'q':
+                return
             for p in current_line.products:
                 #Find products that start with the short code (case insensitive)
                 if p.brand.lower().startswith(short_code.lower()):
@@ -207,7 +219,12 @@ def new_batch():
         for i, pro in zip(range(len(p_list)), p_list):
             print (str(i) + " -- " + pro.to_pretty_string())
         while True:
-            selection = int(input("Select product: "))
+            selection = input("Select product: ")
+            if len(selection) < 1: # selection must not be empty
+                continue
+            if selection == 'q': # allow the user to quit
+                return
+            selection = int(selection)
             if selection >= 0 and selection < len(p_list):
                 break
         selected_product = p_list[selection]
@@ -218,10 +235,13 @@ def new_batch():
             print (str(i) + " -- " + pal)
         while True:
             selection = input("Select pallette (u for unknown): ")
+            if len(selection) < 1 or len(selection) > 2:
+                continue
             if selection == 'u':
                 selected_pallette = "Unknown"
                 break
             else:
+                
                 selection = int(selection)
                 if selection >= 0 and selection < len(current_line.pallettes):
                     selected_pallette = current_line.pallettes[selection]
@@ -267,6 +287,7 @@ def print_all_data():
         print(s.to_pretty_string())
         print("Runs:")
         s.print_all_runs_with_batches()
+        print("\n")
 
 def save_data():
     global modified_schedules
@@ -339,37 +360,43 @@ def error(error_message = None):
     else:
         print ("Error: "+error_message)
 
-schedule_directory = "C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\schedules\\"
-init_data()
-modified_schedules = []
-funcs = {   1: new_auto_schedule,
-            2: new_run,
-            3: new_batch,
-            4: select_line,
-            5: select_run,
-            6: select_schedule,
-            7: print_selected_data,
-            8: print_all_data,
-            9: save_data,
-            10: adj_run_date,
-            11: new_manual_schedule
-        }
-while True:
-    print_main_prompt_menu()
-    choice = input('>: ')
-    if len(choice) > 2 or len (choice) < 1: #not a valid size
-        error("Enter a one- or two-digit number to select an option.")
-        continue
-    choice = choice.strip() # remove white space and convert to int
-    if choice == 'q':
-        print("Quitting...")
-        sys.exit()
-    else:
-        choice = int(choice)
-        try:
-            funcs[choice]() # execute the chosen function based on funcs dictionary
-        except KeyError:
-            error("Function could not be found in dictionary")
-    choice = -1
-    
+def start():
+    global schedule_directory
+    schedule_directory = "C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\schedules\\"
+    init_data()
+    global modified_schedules
+    modified_schedules = []
+    funcs = {   1: new_auto_schedule,
+                2: new_run,
+                3: new_batch,
+                4: select_line,
+                5: select_run,
+                6: select_schedule,
+                7: print_selected_data,
+                8: print_all_data,
+                9: save_data,
+                10: adj_run_date,
+                11: new_manual_schedule
+            }
+    while True:
+        print_main_prompt_menu()
+        while True:
+            choice = input('>: ')
+            if len(choice) > 2 or len (choice) < 1: #not a valid size
+                error("Enter a one- or two-digit number to select an option.")
+                continue
+            choice = choice.strip() # remove white space and convert to int
+            if choice == 'q':
+                print("Quitting...")
+                sys.exit()
+            else:
+                choice = int(choice)
+                try:
+                    funcs[choice]() # execute the chosen function based on funcs dictionary
+                    break
+                except KeyError:
+                    error("Function could not be found in dictionary")
+                
+if __name__ == '__main__':
+    start()
         
