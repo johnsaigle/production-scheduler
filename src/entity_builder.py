@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import datetime
 import sys
+import os
 from lib.entities import schedule_classes
 from lib.entities import entity_classes
 from lib.loaders import schedule_loader
@@ -12,23 +13,25 @@ def next_free_date_index(bit_vector):
     return bit_vector.index(0)
 
 def mark_date_as_used(date_as_isoformat):
-    """Mark a date as being used within the global bit vector"""
+    """Mark a date (in isoformat) as being used within the global bit vector"""
     global fridays
     datelist = fridays
     global unused_fridays
     unused_fridays[datelist.index(date_as_isoformat)] = 1 # this is a bit vector
     
 def generate_fridays():
-    """"Generates a list of all fridays up to today."""
+    """"Generates a list of all fridays until ewnd of current year"""
     fridays = []
-    date = datetime.date(2014,1,1)
-    # get the first friday from the 
-    while not date.isoweekday() == 5:
-        date += datetime.timedelta(days=1)
-    #date is now equal to the first friday in 2014
-    while not date > date.today():
-        fridays.append(date.isoformat())
-        date += datetime.timedelta(days=7)
+    start_date = datetime.date(2014,1,1)
+    today = datetime.date.today()
+    end_date = datetime.date(today.year, 12, 31)
+    date_to_incr = start_date
+    while not date_to_incr.isoweekday() == 5:
+        date_to_incr += datetime.timedelta(days=1)
+    #date is now equal to the first friday in 2014 when the program was written
+    while not date_to_incr > end_date:
+        fridays.append(date_to_incr.isoformat())
+        date_to_incr += datetime.timedelta(days=7)
     return fridays
 
 def select_schedule():
@@ -84,7 +87,7 @@ def select_line():
     current_line = production_lines[int(input("Select line: "))]
     print ("Current line: " +current_line.name)
     
-def new_schedule():
+def new_auto_schedule():
     """Automatically generate a new schedule by obtaining the next friday for which there is no schedule"""
     global schedules
     global fridays
@@ -94,8 +97,27 @@ def new_schedule():
     s = schedule_classes.Schedule(free_date)
     mark_date_as_used(free_date)
     current_schedule = s
-    schedules.append(s)
-    print ("Schedule created ({0})".format(s.date))
+    schedules.append(current_schedule)
+    print ("Schedule created for {0}".format(current_schedule.date))
+
+def new_manual_schedule():
+    """Initialize a schedule by typing in the date in the format YYY-MM-DD"""
+    global schedules
+    global current_schedule
+    while True:
+        try:
+            date = input("Enter date for the new schedule formatted as YYYY-MM-DD): ")
+            man_s  = schedule_classes.Schedule(date)
+            man_date = datetime.datetime.strptime(date, "%Y-%m-%d")
+            break
+        except ValueError:
+            print("Invalid date.")
+    
+    if man_date.isoweekday() == 5:
+        mark_date_as_used(datetime.datetime.strftime(man_date, "%Y-%m-%d"))
+    current_schedule = man_s
+    schedules.append(current_schedule)
+    print ("Manual schedule created for {0}".format(current_schedule.date))
 
 def new_run():
     global current_run
@@ -148,21 +170,25 @@ def new_batch():
     if not current_line:
         select_line()
     if not current_run:
-        print ("No current run.")
-        print ("0 -- Select run from current schedule")
-        print ("1 -- Create new run")
-        while True:
-            selection = int(input("Selection: "))
-            if selection == 0:
-                select_run()
-                break
-            elif selection == 1:
-                new_run()
-                break
+        if len(current_schedule.runs[current_line.name] < 1):
+            new_run()
+        else:
+            print ("No current run.")
+            print ("0 -- Select run from current schedule")
+            print ("1 -- Create new run")
+            while True:
+                selection = int(input("Selection: "))
+                if selection == 0:
+                    select_run()
+                    break
+                elif selection == 1:
+                    new_run()
+                    break
     print("\nAll necessary data successfully initialized:")
     print("Schedule "+current_schedule.to_pretty_string())     
-    print(current_line.name + " -- run date " + current_run.date)
-
+    print("Selected line is "+current_line.name + ". Run date " + current_run.date)
+    print("Batch list for current run: ")
+    current_run.print_all_batches()
     while True:
         print("\nCreating new batch...")
         # select product
@@ -194,6 +220,7 @@ def new_batch():
             selection = input("Select pallette (u for unknown): ")
             if selection == 'u':
                 selected_pallette = "Unknown"
+                break
             else:
                 selection = int(selection)
                 if selection >= 0 and selection < len(current_line.pallettes):
@@ -222,7 +249,7 @@ def print_selected_data():
     global current_line
     global current_run
     if current_schedule:
-        print("Schedule "+current_schedule.to_pretty_string())
+        print(current_schedule.to_pretty_string())
     else:
         print("No schedule selected.")
     if current_line:
@@ -230,14 +257,14 @@ def print_selected_data():
     else:
         print("No line selected.")
     if current_run:
-        print("Run: "+current_run.to_pretty_string())
+        print(current_run.to_pretty_string())
     else:
         print("No run selected.")
 
 def print_all_data():
     global schedules
     for s in schedules:
-        print("Schedule " +s.to_pretty_string())
+        print(s.to_pretty_string())
         print("Runs:")
         s.print_all_runs_with_batches()
 
@@ -278,8 +305,12 @@ def init_data():
     fridays = generate_fridays()
     unused_fridays = [0] * len(fridays) # this is a bit vector to keep track of the next avaialble friday
     production_lines = entity_loader.build_lines() # load production line data
+    # get existing schedules
     print ("\nLoading previous schedules...")
-    schedules = schedule_loader.build_multiple_schedules(fridays, schedule_directory)
+    prev_schedules = os.listdir(schedule_directory)
+    for ps in prev_schedules:
+        ps.rstrip('.csv')
+    schedules = schedule_loader.build_multiple_schedules(prev_schedules, schedule_directory)
     # process loaded schedules
     if len(schedules) > 0:   
         print ("\n"+str(len(schedules))+" schedules loaded:")
@@ -289,7 +320,7 @@ def init_data():
     
 def print_main_prompt_menu():
     print ("\nEntity Builder~")
-    print ("1) New schedule")
+    print ("1) Create new schedule automatically (picks first friday without an existing schedule)")
     print ("2) New run")
     print ("3) New batch")
     print ("4) Select line")
@@ -299,6 +330,7 @@ def print_main_prompt_menu():
     print ("8) Print all schedule data")
     print ("9) Save to csv")
     print ("10) Increment run date (for days off)")
+    print ("11) Create new schedule manually (if next Friday is a holiday, etc.)")
     print ("q) Quit\n")
 
 def error(error_message = None):
@@ -310,7 +342,7 @@ def error(error_message = None):
 schedule_directory = "C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\schedules\\"
 init_data()
 modified_schedules = []
-funcs = {   1: new_schedule,
+funcs = {   1: new_auto_schedule,
             2: new_run,
             3: new_batch,
             4: select_line,
@@ -319,7 +351,8 @@ funcs = {   1: new_schedule,
             7: print_selected_data,
             8: print_all_data,
             9: save_data,
-            10: adj_run_date
+            10: adj_run_date,
+            11: new_manual_schedule
         }
 while True:
     print_main_prompt_menu()

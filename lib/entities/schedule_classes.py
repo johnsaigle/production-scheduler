@@ -97,7 +97,7 @@ class Schedule:
         return to_return
     
     def to_pretty_string(self):
-        return "Date: " + self.date +". "+str(self.get_total_runs()) +" runs recorded.\n"+self.total_runs_by_line_string()
+        return "Schedule date: " + self.date +". "+str(self.get_total_runs()) +" runs recorded.\n\t"+self.total_runs_by_line_string()
 
 class Run:
     """A series of batches to be produced in one day"""
@@ -127,7 +127,7 @@ class Run:
             return True
 
     def to_pretty_string(self):
-        return self.date + " -- " +str(len(self.batches)) + " batches recorded"
+        return "Run date: "+self.date + " - " +str(len(self.batches)) + " batches recorded"
 
     def print_all_batches(self):
         for b in self.batches:

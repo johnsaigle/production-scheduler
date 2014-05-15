@@ -65,10 +65,10 @@ def build_schedule_from_csv(filepath):
         print ("An error occurred while building schedule from file " +os.path.basename(filepath))
         return None
 
-def build_multiple_schedules(schedule_names, directory_path):
+def build_multiple_schedules(filenames, directory_path):
     to_return = []
-    for s in schedule_names:
-        s_filepath = directory_path + s + '.csv'
+    for s in filenames:
+        s_filepath = directory_path + s
         s_to_add = build_schedule_from_csv(s_filepath)
         if not s_to_add == None:
             to_return.append(s_to_add)
