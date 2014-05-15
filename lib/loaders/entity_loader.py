@@ -11,6 +11,7 @@ def build_lines():
   for row in production_line_information:
     pallettes = []
     line_name = row[0] # first element of this row
+    print("Loading information for line "+line_name)
     #Create the line
     line = entity_classes.Line(line_name)
     production_lines.append(line) 
@@ -23,8 +24,7 @@ def build_lines():
     while i < len(row):
       line.add_new_pallette(row[i])
       i += 1
-
-    print ("\nFinished building line "+line_name)
     print (line.to_pretty_string())
-    
+    print ("Finished building line "+line_name+"\n")
+      
   return production_lines

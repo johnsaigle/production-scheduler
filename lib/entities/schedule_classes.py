@@ -18,16 +18,13 @@ class Schedule:
             print("Run date: {0}. Schedule date: {1}".format(run_to_add.date, self.date))
             return False
         # if there's no info for this line
-        print("Passed date check")
         if line_name not in self.runs:
-            print("At name check")
             if len(self.runs) >= 3:
                 print ("Error -- too many production lines. Rejecting addition.")
                 return False
             else:
                 self.runs[line_name] = []
                 self.runs[line_name].append(run_to_add)
-                print("Added new run to new line")
         elif len(self.runs[line_name]) > 0:
                 # we want only seven runs per schedule
                 if (len(self.runs[line_name]) >= 7):

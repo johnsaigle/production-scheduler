@@ -1,10 +1,11 @@
 #Note: change all to_pretty_string to __repr__
 class Product:
   """Represents one type of product produced in a batch on some Line"""
-  def __init__(self, brand, kind, size, base_unit=None):
+  def __init__(self, brand, kind, size, product_code=None, base_unit=None):
       self.brand = brand
       self.kind = kind # placeholder for what the product is -- can be oil visocosity, ATF (automatic transmission fluid, PSF (powersteering fluid etc 
       self.size = size # products per pallette
+      self.product_code = product_code
       self.base_unit = base_unit
 
     #returns a string for nice output

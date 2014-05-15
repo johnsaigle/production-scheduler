@@ -8,16 +8,18 @@ from lib.loaders import entity_loader
 from itertools import repeat
 
 def next_free_date_index(bit_vector):
+    """Find the next unsued date according to bit vector parameter"""
     return bit_vector.index(0)
 
 def mark_date_as_used(date_as_isoformat):
+    """Mark a date as being used within the global bit vector"""
     global fridays
     datelist = fridays
     global unused_fridays
     unused_fridays[datelist.index(date_as_isoformat)] = 1 # this is a bit vector
     
 def generate_fridays():
-    """"We are only concerned with friday production schedules. Generates a list of all fridays up to today"""
+    """"Generates a list of all fridays up to today."""
     fridays = []
     date = datetime.date(2014,1,1)
     # get the first friday from the 
@@ -30,6 +32,7 @@ def generate_fridays():
     return fridays
 
 def select_schedule():
+    """Select the global current schedule"""
     global current_schedule
     global schedules
     if len(schedules) < 1:
@@ -44,6 +47,7 @@ def select_schedule():
     print ("Current schedule: " +current_schedule.to_pretty_string())
 
 def select_run():
+    """Select the global current run"""
     global current_schedule
     global current_line
     global current_run
@@ -72,6 +76,7 @@ def select_run():
                 break
 
 def select_line():
+    """Set the current line globally"""
     global production_lines
     global current_line
     for i, l in zip(range(len(production_lines)), production_lines):
@@ -159,7 +164,10 @@ def new_batch():
                 
         for i, pro in zip(range(len(p_list)), p_list):
             print (str(i) + " -- " + pro.to_pretty_string())
-        selection = int(input("Select product: "))
+        while True:
+            selection = int(input("Select product: "))
+            if selection >= 0 and selection < len(p_list):
+                break
         selected_product = p_list[selection]
         print (selected_product.to_pretty_string() + " selected.")
 
@@ -167,10 +175,12 @@ def new_batch():
         for i, pal in zip(range(len(current_line.pallettes)), current_line.pallettes):
             print (str(i) + " -- " + pal)
         while True:
-            selection = int(input("Select pallette: "))
-            if selection >= 0 and selection < len(current_line.pallettes) -1:
+            selection = input("Select pallette (u for unknown): ")
+            if selection == 'u':
+                selected_pallette = "Unknown"
+            if selection >= 0 and selection < len(current_line.pallettes):
+                selected_pallette = current_line.pallettes[selection]
                 break
-        selected_pallette = current_line.pallettes[selection]
         qty = int(input("Enter quantity: "))
         b = schedule_classes.Batch(selected_product, selected_pallette, qty)
         if current_run.add_batch(b) == False:
@@ -182,8 +192,9 @@ def new_batch():
         if not current_schedule in modified_schedules:
             modified_schedules.append(current_schedule)
 
-        repeat = int(input("Enter 1 to add another batch or enter any key to return to main menu: "))
-        if not repeat == 1: # return to main menu
+        repeat = input("Enter 0 to add another batch. Press enter to return to main menu: ")
+
+        if repeat != '0': # return to main menu
             break
         
     current_run = None
@@ -218,8 +229,21 @@ def save_data():
     if len(modified_schedules) > 0:
         print("Saving modified schedules...")
         schedule_loader.save_multiple_schedules(modified_schedules, schedule_directory)
+        modified_schedules = []
     else:
         print("Nothing to save!")
+
+def adj_run_date():
+    """Permanently increments the date of the current run"""
+    global current_run
+    if current_run == None:
+        print("No run selected. Returning to main menu.")
+        return False
+    old_date = current_run.date
+    date = datetime.datetime.strptime(current_run.date, "%Y-%m-%d")
+    date += datetime.timedelta(days=1)
+    current_run.date = date.strftime("%Y-%m-%d")
+    print("Date changed from "+old_date +" to "+current_run.date)
         
 def init_data():
     global current_schedule
@@ -256,6 +280,7 @@ def print_main_prompt_menu():
     print ("7) Print selected data (current schedule, line and run)")
     print ("8) Print all schedule data")
     print ("9) Save to csv")
+    print ("10) Increment run date (for days off)")
     print ("q) Quit\n")
 
 def error(error_message = None):
@@ -275,14 +300,14 @@ funcs = {   1: new_schedule,
             6: select_schedule,
             7: print_selected_data,
             8: print_all_data,
-            9: save_data
+            9: save_data,
+            10: adj_run_date
         }
-choice = -1
-while not choice == '0':
+while True:
     print_main_prompt_menu()
     choice = input('>: ')
-    if not len(choice) == 1: #not a valid size
-        error("input size must be equal to 1")
+    if len(choice) > 2 or len (choice) < 1: #not a valid size
+        error("Enter a one- or two-digit number to select an option.")
         continue
     choice = choice.strip() # remove white space and convert to int
     if choice == 'q':
