@@ -109,17 +109,33 @@ def new_run():
         print("No line selected.")
         select_line()
     run_date = current_schedule.next_run_date(current_line)
-    run_total = int(input("Enter expected total for run: "))
-    current_run = schedule_classes.Run(run_date, run_total)
     # Add run to current schedule
+    current_run = schedule_classes.Run(run_date)
     success = current_schedule.add_run(current_line.name, current_run)
     if success == False:
-        print("Adding current run failed. Returning to main menu.")
-    else:
-        print("Run added.")
-        if not current_schedule in modified_schedules:
-            modified_schedules.append(current_schedule)
+        print("Adding current run failed.")
+        current_run = None
+        while True: 
+            switch_line = input("Select different line? (y/n) ")
+            if switch_line == 'y':
+                select_line()
+                return new_run()
+            elif switch_line == 'n':
+                print ("Returning to main menu.")
+                return False
+                
+    print("Run added to current schedule.")
+    while True:
+        try:
+            run_total = int(input("Enter expected total for run: "))
+            break
+        except Exception as e:
+            print("Expected total must be a number.")
+    current_run.expected_total = run_total
+    if not current_schedule in modified_schedules:
+        modified_schedules.append(current_schedule)
     print ("Current run: "+current_run.to_pretty_string())
+    return True
 
 def new_batch():
     global production_lines
@@ -178,9 +194,11 @@ def new_batch():
             selection = input("Select pallette (u for unknown): ")
             if selection == 'u':
                 selected_pallette = "Unknown"
-            if selection >= 0 and selection < len(current_line.pallettes):
-                selected_pallette = current_line.pallettes[selection]
-                break
+            else:
+                selection = int(selection)
+                if selection >= 0 and selection < len(current_line.pallettes):
+                    selected_pallette = current_line.pallettes[selection]
+                    break
         qty = int(input("Enter quantity: "))
         b = schedule_classes.Batch(selected_product, selected_pallette, qty)
         if current_run.add_batch(b) == False:
@@ -204,7 +222,7 @@ def print_selected_data():
     global current_line
     global current_run
     if current_schedule:
-        print("Schedule: "+current_schedule.to_pretty_string())
+        print("Schedule "+current_schedule.to_pretty_string())
     else:
         print("No schedule selected.")
     if current_line:

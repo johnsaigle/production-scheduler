@@ -86,9 +86,18 @@ class Schedule:
             for run in self.runs[line]:
                 total += 1
         return total
+
+    def total_runs_by_line_string(self):
+        to_return = ""
+        for line_name in self.runs:
+            total = 0
+            for run in self.runs[line_name]:
+                total +=1
+            to_return += "{line}: {num_runs} runs recorded. ".format(line=line_name, num_runs=total)
+        return to_return
     
     def to_pretty_string(self):
-        return "Date: " + self.date +". "+str(self.get_total_runs()) +" runs recorded."
+        return "Date: " + self.date +". "+str(self.get_total_runs()) +" runs recorded.\n"+self.total_runs_by_line_string()
 
 class Run:
     """A series of batches to be produced in one day"""
