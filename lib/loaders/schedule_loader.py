@@ -20,6 +20,7 @@ def save_schedule_to_csv(schedule, filepath):
                 col_values.append(r.date)
                 col_values.append(r.expected_total)
                 col_values.extend(b.as_list())
+                col_values.append(schedule.date)
                 rows_to_write.append(col_values)
     filepath = 'C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\schedules\\'+sch.date +'.csv'
     csv_loader.save_csv_info(filepath, rows_to_write)
