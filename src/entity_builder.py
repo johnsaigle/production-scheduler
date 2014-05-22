@@ -2,6 +2,7 @@
 import datetime
 import sys
 import os
+import inspect
 from lib.entities import schedule_classes
 from lib.entities import entity_classes
 from lib.loaders import schedule_loader
@@ -320,12 +321,13 @@ def init_data():
     global production_lines
     global schedules
     global schedule_directory
+    global script_root_directory
     current_schedule = None
     current_line = None
     current_run = None
     fridays = generate_fridays()
-    unused_fridays = [0] * len(fridays) # this is a bit vector to keep track of the next avaialble friday
-    production_lines = entity_loader.build_lines() # load production line data
+    unused_fridays = [0] * len(fridays) # this is a bit vector to keep track of the next avaialble friday for auto schedule creation
+    production_lines = entity_loader.build_lines(script_root_directory) # load production line data
     # get existing schedules
     print ("\nLoading previous schedules...")
     prev_schedules = os.listdir(schedule_directory)
@@ -362,7 +364,12 @@ def error(error_message = None):
 
 def start():
     global schedule_directory
-    schedule_directory = "C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\schedules\\"
+    global script_root_directory
+    working_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) # this will return the filepath of the src directory
+    print(working_dir)
+    if working_dir.endswith('/src'):
+        script_root_directory = working_dir[:-4] # removes the final four characters
+    schedule_directory = script_root_directory + '/data/schedules/' #this works for Mac, not sure yet about windows
     init_data()
     global modified_schedules
     modified_schedules = []

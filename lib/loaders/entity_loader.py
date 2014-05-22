@@ -3,10 +3,11 @@ import csv
 from lib.entities import entity_classes
 from . import csv_loader
 
-def build_lines():
+def build_lines(script_root_directory):
   """Construct the production lines based on data csv data info"""
   production_lines = []
-  production_line_information = csv_loader.load_csv_info('C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\raw\\lines\\lines.csv')
+  production_line_information = csv_loader.load_csv_info(script_root_directory + '/data/raw/lines/lines.csv')
+#'C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\raw\\lines\\lines.csv')
   print (production_line_information)
   for row in production_line_information:
     pallettes = []
@@ -17,7 +18,7 @@ def build_lines():
     production_lines.append(line) 
     # Add product info
     product_source_name = line_name + '.csv'
-    product_info = csv_loader.load_csv_info('C:\\Users\\Brockville\\Documents\\John Summer File\\production-scheduler\\data\\raw\\products\\'+product_source_name)
+    product_info = csv_loader.load_csv_info(script_root_directory + '/data/raw/products/'+product_source_name)
     line.populate_product_list(product_info)
     #Add pallette info
     i = 1

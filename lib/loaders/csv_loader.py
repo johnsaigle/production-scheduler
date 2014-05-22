@@ -1,18 +1,28 @@
 import csv
 import os.path
+from sys import platform as _platform
 def load_csv_info(filepath):
   """ Loads data from a csv file and returns the results"""
   rows_to_return = []
   base = os.path.basename(filepath)
   try:
-    with open(filepath, newline='') as csvfile:
-      reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-      print("Opening file "+base)
-      for row in reader:
-        if len(row) > 0:
-          rows_to_return.append(row)
-  except Exception as e:
-    print ("File does not exist -- "+base)
+    print("Trying to open file " +filepath)
+    if (_platform == "darwin"): #OS X
+        with open(filepath, newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            print("Opening file "+base)
+            for row in reader:
+                if len(row) > 0:
+                    rows_to_return.append(row)
+    elif (_platform == "win32"): #windows
+        with open(filepath, newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            print("Opening file "+base)
+            for row in reader:
+                if len(row) > 0:
+                    rows_to_return.append(row)
+  except IOError:
+    print ("File does not exist -- "+filepath)
     return None
   return rows_to_return
 
