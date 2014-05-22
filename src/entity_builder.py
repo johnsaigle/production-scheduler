@@ -367,9 +367,15 @@ def start():
     global script_root_directory
     working_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) # this will return the filepath of the src directory
     print(working_dir)
-    if working_dir.endswith('/src'):
+    if working_dir.endswith('/src'): # unix 
         script_root_directory = working_dir[:-4] # removes the final four characters
-    schedule_directory = script_root_directory + '/data/schedules/' #this works for Mac, not sure yet about windows
+        schedule_directory = script_root_directory + '/data/schedules/' #this works for Mac, not sure yet about windows
+    elif working_dir.endswith('\\src'): #windows
+        script_root_directory = working_dir[:-4] # removes the final four characters
+        schedule_directory = script_root_directory + '\\data\\schedules\\'
+    else:
+        print ("Loading error: script not launched from within src directory")
+        sys.exit()
     init_data()
     global modified_schedules
     modified_schedules = []

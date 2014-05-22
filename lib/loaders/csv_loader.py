@@ -6,7 +6,6 @@ def load_csv_info(filepath):
   rows_to_return = []
   base = os.path.basename(filepath)
   try:
-    print("Trying to open file " +filepath)
     if (_platform == "darwin"): #OS X
         with open(filepath, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='|')

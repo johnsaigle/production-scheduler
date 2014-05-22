@@ -42,7 +42,7 @@ def build_schedule_from_csv(filepath):
         date = os.path.basename(filepath).rstrip(".csv") #get date from file name
         s_to_return = schedule_classes.Schedule(date)
         for row in production_batch_info: # each line represents a batch
-            if not len(row) == 8: # bad format
+            if not len(row) == 9: # bad format
                 continue
             # according to csv save format:
             line_name = row[0]
