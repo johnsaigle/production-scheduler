@@ -152,7 +152,6 @@ def new_run():
             switch_line = input("Select different line? (y/n) ")
             if switch_line == 'y':
                 select_line()
-                return new_run()
             elif switch_line == 'n':
                 print ("Returning to main menu.")
                 return False
@@ -194,7 +193,8 @@ def new_batch():
                     new_run()
                     break
         else:
-            new_run()
+            if new_run() == False:
+                return False
     print("\nAll necessary data successfully initialized:")
     print("Schedule "+current_schedule.to_pretty_string())     
     print("Selected line is "+current_line.name + ". Run date " + current_run.date)
@@ -242,11 +242,22 @@ def new_batch():
                 selected_pallette = "Unknown"
                 break
             else:
-                
                 selection = int(selection)
                 if selection >= 0 and selection < len(current_line.pallettes):
                     selected_pallette = current_line.pallettes[selection]
                     break
+        while True:
+            selection = input("Enter quantity: ")
+            if len(selection) < 1 or len(selection) > 2:
+                continue
+            else:
+                try:
+                    selection = int(selection)
+                    if selection >= 0 and selection < len(current_line.pallettes):
+                        selected_pallette = current_line.pallettes[selection]
+                        break
+                except ValueError:
+                    continue
         qty = int(input("Enter quantity: "))
         b = schedule_classes.Batch(selected_product, selected_pallette, qty)
         if current_run.add_batch(b) == False:
