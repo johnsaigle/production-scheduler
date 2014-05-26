@@ -28,9 +28,10 @@ class Schedule:
         elif len(self.runs[line_name]) > 0:
                 # we want only seven runs per schedule
                 if (len(self.runs[line_name]) >= 7):
-                    print("There are already seven entries for {0}".format(line_name))
-                    self.print_all_runs()
-                    return False
+                    pass
+                    #print("There are already seven entries for {0}".format(line_name))
+                    #self.print_all_runs()
+                   # return False
                 else:
                     for extant_run in self.runs[line_name]:
                         if run_to_add.date == extant_run.date and run_to_add.expected_total == extant_run.expected_total:
@@ -41,15 +42,15 @@ class Schedule:
                             return True
                     self.runs[line_name].append(run_to_add)        
 
-    def runs_by_date(self, line = None):
+    def runs_by_date(self, line_name = None):
         """Returns a list of the runs sorted by date. If line is none, sorts over all lines"""
         runs_to_return = []
         # iterate over all runs and return them sorted by line, then date
-        if line == None:
+        if line_name == None:
             for key in self.runs:
                 runs_to_return.extend(sorted(self.runs[key], key=lambda run: run.date))
         else:
-            runs_to_return.extend(sorted(self.runs[line.name], key=lambda run: run.date))
+            runs_to_return.extend(sorted(self.runs[line_name], key=lambda run: run.date))
         return runs_to_return
 
     def print_all_runs(self):

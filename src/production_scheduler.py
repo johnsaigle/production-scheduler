@@ -23,62 +23,83 @@ def run_entity_builder():
     entity_builder.start()
 
 def dates_to_weekday(schedule, line):
+    weekdays = []
     date_strings = [r.date for r in schedule.runs[line]]
-    dates = [datetime.datetime.strptime(ds, "%Y-%m-%d") for ds in date_strings]
-    weekdays = [d.strftime("%A") for d in dates]
+    if date_strings[0] == schedule.date:
+        del date_strings[0]
+        weekdays.append('Today')
+    dates = [datetime.datetime.strptime(ds, "%Y-%m-%d") if not ds == schedule.date else 'Today' for ds in date_strings]
+    weekdays.extend([d.strftime("%A") for d in dates])
+
     return weekdays
 
-def plot(s):
+def plot(s, filepath):
    print("Plotting schedule.")
    print(s.to_pretty_string())
-   plots = []
 
-   # To make a stacked bar graph, we need to create an
-   # array for each i batch
-   num_batches = []
-   for key in s.runs:
-       num_batches.append(len(s.runs[key]))
-   max_batches = max(num_batches) # the max to iterate over
-   batches_to_plot = []
-   # init array with empty lists
-   for i in range(0,max_batches):
-       batches_to_plot.append([])
+   for line in s.runs:
+       plots = []
+       runs = s.runs_by_date(line)
 
-   # get info for the graph
-   line = 'BF713'
-   for i in range(0, max_batches):
-       for r in s.runs[line]:
-           if i >= len(r.batches):
-               batches_to_plot[i].extend([0])
-               continue
-           # add ith batch of r to ith row in batches_to_plot
-           b = r.batches[i]
-           qty = int(b.expected_quantity)
-           batches_to_plot[i].extend([qty]) # qty must be a list because extend tries to iterate over elements, and ints are not iterable
+       # To make a stacked bar graph, we need to create an
+       # array for each i batch
+       # get info for the graph
+       num_batches_per_run = []
+       for r in runs:
+            num_batches_per_run.append(len(r.batches))
+       max_batches = max(num_batches_per_run)
+       batches_to_plot = []
+       # init array with empty lists which will be filled with batch info
+       for i in range(0,max_batches):
+           batches_to_plot.append([])
 
-   #set up formatting
-   N = max_batches # max days recorded per schedule
-   ind = np.arange(N) # column spacing
-   width = 0.6
-   cols = ['r', 'b', 'g','y', 'k', '#551A8B', '#EE82EE']
-   col = 1 # represents the colour of the batches
-   xticks = dates_to_weekday(s, line)
-   plt.xticks(ind+width/2., np.asarray(xticks) )
-   plt.ylabel('Run Total')
+       for i in range(0, max_batches):
+           for r in runs:
+               if i >= len(r.batches):
+                   batches_to_plot[i].extend([0])
+                   continue
+               # add ith batch of r to ith row in batches_to_plot
+               b = r.batches[i]
+               qty = int(b.expected_quantity)
+               batches_to_plot[i].extend([qty]) # qty must be a list because extend tries to iterate over elements, and ints are not iterable
 
-   # build graph and print data
-   print(batches_to_plot[0])
-   plt.bar(ind, np.asarray(batches_to_plot[0]), width, color = 'r')
-   bottom = np.cumsum(batches_to_plot,axis = 0)
-   for i in range(1, len(batches_to_plot)):
-       print(batches_to_plot[i])
-       plt.bar(ind, np.asarray(batches_to_plot[i]), width, color = cols[col], bottom=bottom[i-1])
-       col += 1
-   plt.show()
-   plt.savefig('test.pdf')
+       #set up formatting
+       N = len(runs) # max days recorded per schedule
+       ind = np.arange(N) # column spacing
+       width = 0.6
+       cols = ['r', 'b', 'g','y', '#D4D4D4', '#551A8B', '#EE82EE', '#FF6103', '#FFCC11', '#CDD704']
+       col = 1 # represents the colour of the batches
+       xticks = dates_to_weekday(s, line) # convert the dates to weekdays
+       plt.xticks(ind+width/2., np.asarray(xticks))
+       plt.ylabel('Run Total')
+       plt.title("Production Schedule for "+ line + " -- "+s.date)
+
+       # build graph and print data
+       print("Building graph ("+line+")")
+       print(batches_to_plot[0])
+       plt.bar(ind, np.asarray(batches_to_plot[0]), width, color = 'r')
+       bottom = np.cumsum(batches_to_plot,axis = 0)
+       for i in range(1, len(batches_to_plot)):
+           print(batches_to_plot[i])
+           plt.bar(ind, np.asarray(batches_to_plot[i]), width, color = cols[col%10], bottom=bottom[i-1])
+           col += 1
+       # trend line
+       y = np.array([r.expected_total for r in s.runs[line]])
+       plt.plot(y)
+       # save figures to appropriate directories
+       if not os.path.exists(filepath):
+           os.makedirs(filepath)
+       plt.savefig(filepath + line + '.pdf')
+
+def error(error_message = None):
+    if not error_message:
+        print ("Something went wrong.")
+    else:
+        print ("Error: "+error_message)
     
 def load_schedules():
     global schedules
+    global script_root_directory
     working_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) # this will return the filepath of the src directory
     if working_dir.endswith('/src'): # unix 
         script_root_directory = working_dir[:-4] # removes the final four characters
@@ -94,14 +115,13 @@ def load_schedules():
     schedules = s_loader.build_multiple_schedules(prev_schedules, schedule_directory)
     print ("Schedules loaded.")
 
-def invalid():
-    print ("Bad function name. Try %s" % (", ".join(funcs.keys())))
-
+#MAIN
 main_funcs = {  1: run_entity_builder,
                 2: plot,
                 3: load_schedules
              }
 global schedules
+global script_root_directory
 schedules = []
 while True:
       choice = -1
@@ -131,7 +151,7 @@ while True:
                 print (str(i) +" -- " +s.to_pretty_string())
             selection= int(input("Select schedule: "))
             curr_schedule = schedules[selection]
-            plot(curr_schedule)
+            plot(curr_schedule, script_root_directory+'\\reports\\'+curr_schedule.date+'\\')
             continue
         try:
             main_funcs[choice]() # execute the chosen function based on funcs dictionary
