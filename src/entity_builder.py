@@ -247,18 +247,14 @@ def new_batch():
                     selected_pallette = current_line.pallettes[selection]
                     break
         while True:
-            selection = input("Enter quantity: ")
-            if len(selection) < 1 or len(selection) > 2:
-                continue
-            else:
-                try:
-                    selection = int(selection)
-                    if selection >= 0 and selection < len(current_line.pallettes):
-                        selected_pallette = current_line.pallettes[selection]
-                        break
-                except ValueError:
-                    continue
-        qty = int(input("Enter quantity: "))
+            qty = input("Enter quantity: ")
+            try:
+               qty = int(qty)
+               if selection >= 0 and selection < len(current_line.pallettes):
+                   selected_pallette = current_line.pallettes[selection]
+                   break
+            except ValueError:
+               continue
         b = schedule_classes.Batch(selected_product, selected_pallette, qty)
         if current_run.add_batch(b) == False:
             print("Adding batch failed.")
@@ -412,7 +408,7 @@ def start():
             choice = choice.strip() # remove white space and convert to int
             if choice == 'q':
                 print("Quitting...")
-                sys.exit()
+                return # this will end this script
             else:
                 choice = int(choice)
                 try:

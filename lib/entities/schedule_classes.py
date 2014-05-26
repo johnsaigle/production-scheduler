@@ -103,7 +103,7 @@ class Run:
     """A series of batches to be produced in one day"""
     def __init__(self, date, expected_total=None):
         self.batches = []
-        self.expected_total = expected_total # as calculated in the production schedule by SAP
+        self.expected_total = int(expected_total) # as calculated in the production schedule by SAP
         self.date = date # the day of manufacture
     
     def add_batch(self, batch):
