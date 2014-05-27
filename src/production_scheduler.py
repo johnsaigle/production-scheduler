@@ -40,10 +40,11 @@ def plot(s, filepath):
    for line in s.runs:
        plots = []
        runs = s.runs_by_date(line)
+       fig = plt.figure()
+       ax = fig.add_subplot(111)
 
        # To make a stacked bar graph, we need to create an
        # array for each i batch
-       # get info for the graph
        num_batches_per_run = []
        for r in runs:
             num_batches_per_run.append(len(r.batches))
@@ -56,6 +57,7 @@ def plot(s, filepath):
        for i in range(0, max_batches):
            for r in runs:
                if i >= len(r.batches):
+                   # pad with zeros if there is no entry
                    batches_to_plot[i].extend([0])
                    continue
                # add ith batch of r to ith row in batches_to_plot
@@ -65,27 +67,39 @@ def plot(s, filepath):
 
        #set up formatting
        N = len(runs) # max days recorded per schedule
-       ind = np.arange(N) # column spacing
-       width = 0.6
+       x_pos = np.arange(N) # column placing
+       width = 0.6 # how wide the bars will appear
        cols = ['r', 'b', 'g','y', '#D4D4D4', '#551A8B', '#EE82EE', '#FF6103', '#FFCC11', '#CDD704']
        col = 1 # represents the colour of the batches
        xticks = dates_to_weekday(s, line) # convert the dates to weekdays
-       plt.xticks(ind+width/2., np.asarray(xticks))
+       plt.xticks(x_pos+width/2., np.asarray(xticks))
        plt.ylabel('Run Total')
+       plt.xlabel('Date of Production')
        plt.title("Production Schedule for "+ line + " -- "+s.date)
+       bottom = np.zeros(N,)
 
        # build graph and print data
        print("Building graph ("+line+")")
-       print(batches_to_plot[0])
-       plt.bar(ind, np.asarray(batches_to_plot[0]), width, color = 'r')
-       bottom = np.cumsum(batches_to_plot,axis = 0)
-       for i in range(1, len(batches_to_plot)):
-           print(batches_to_plot[i])
-           plt.bar(ind, np.asarray(batches_to_plot[i]), width, color = cols[col%10], bottom=bottom[i-1])
-           col += 1
+       bars = []
+       batch_labels = [value for sublist in batches_to_plot for value in sublist] # turns lsit of lists into a flat lsit of values
+       for i, b in enumerate(batches_to_plot):
+           bars.append(ax.bar(x_pos, np.asarray(b), width, bottom=bottom, color = cols[i % len(cols)]))
+           # add the batch value to the offset of the bar positions
+           bottom += b
+
+       # add labels
+       for j in range(len(bars)):
+           for i, bar in enumerate(bars[j].get_children()):
+               bl = bar.get_xy()
+               x = 0.5*bar.get_width() + bl[0]
+               y = 0.5*bar.get_height() + bl[1]
+               if not batches_to_plot[j][i] == 0:
+                   ax.text(x,y, "%d" % (batches_to_plot[j][i]), ha='center', va = 'center')
+
        # trend line
        y = np.array([r.expected_total for r in s.runs[line]])
        plt.plot(y)
+
        # save figures to appropriate directories
        if not os.path.exists(filepath):
            os.makedirs(filepath)
