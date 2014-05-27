@@ -3,8 +3,11 @@ import sys
 import os
 import inspect
 import datetime
+from pylab import polyfit
+from pylab import poly1d
 import matplotlib.pyplot as plt
 import numpy as np
+# my classes
 from lib.entities import schedule_classes 
 from lib.loaders import schedule_loader as s_loader
 from lib.loaders import entity_loader as e_loader
@@ -34,76 +37,88 @@ def dates_to_weekday(schedule, line):
     return weekdays
 
 def plot(s, filepath):
-   print("Plotting schedule.")
-   print(s.to_pretty_string())
+    print("Plotting schedule.")
+    print(s.to_pretty_string())
 
-   for line in s.runs:
-       plots = []
-       runs = s.runs_by_date(line)
-       fig = plt.figure()
-       ax = fig.add_subplot(111)
+    for line in s.runs:
+        plots = []
+        runs = s.runs_by_date(line)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
 
-       # To make a stacked bar graph, we need to create an
-       # array for each i batch
-       num_batches_per_run = []
-       for r in runs:
-            num_batches_per_run.append(len(r.batches))
-       max_batches = max(num_batches_per_run)
-       batches_to_plot = []
-       # init array with empty lists which will be filled with batch info
-       for i in range(0,max_batches):
-           batches_to_plot.append([])
+        # To make a stacked bar graph, we need to create an
+        # array for each i batch
+        num_batches_per_run = []
+        for r in runs:
+             num_batches_per_run.append(len(r.batches))
+        max_batches = max(num_batches_per_run)
+        batches_to_plot = []
+        # init array with empty lists which will be filled with batch info
+        for i in range(0,max_batches):
+            batches_to_plot.append([])
 
-       for i in range(0, max_batches):
-           for r in runs:
-               if i >= len(r.batches):
-                   # pad with zeros if there is no entry
-                   batches_to_plot[i].extend([0])
-                   continue
-               # add ith batch of r to ith row in batches_to_plot
-               b = r.batches[i]
-               qty = int(b.expected_quantity)
-               batches_to_plot[i].extend([qty]) # qty must be a list because extend tries to iterate over elements, and ints are not iterable
+        for i in range(0, max_batches):
+            for r in runs:
+                if i >= len(r.batches):
+                    # pad with zeros if there is no entry
+                    batches_to_plot[i].extend([0])
+                    continue
+                # add ith batch of r to ith row in batches_to_plot
+                b = r.batches[i]
+                qty = int(b.expected_quantity)
+                batches_to_plot[i].extend([qty]) # qty must be a list because extend tries to iterate over elements, and ints are not iterable
 
-       #set up formatting
-       N = len(runs) # max days recorded per schedule
-       x_pos = np.arange(N) # column placing
-       width = 0.6 # how wide the bars will appear
-       cols = ['r', 'b', 'g','y', '#D4D4D4', '#551A8B', '#EE82EE', '#FF6103', '#FFCC11', '#CDD704']
-       col = 1 # represents the colour of the batches
-       xticks = dates_to_weekday(s, line) # convert the dates to weekdays
-       plt.xticks(x_pos+width/2., np.asarray(xticks))
-       plt.ylabel('Run Total')
-       plt.xlabel('Date of Production')
-       plt.title("Production Schedule for "+ line + " -- "+s.date)
-       bottom = np.zeros(N,)
+        #set up formatting
+        N = len(runs) # max days recorded per schedule
+        x_pos = np.arange(N) # column placing
+        width = 0.6 # how wide the bars will appear
+        cols = ['r', 'b', 'g','y', '#D4D4D4', '#551A8B', '#EE82EE', '#FF6103', '#FFCC11', '#CDD704']
+        col = 1 # represents the colour of the batches
+        xticks = dates_to_weekday(s, line) # convert the dates to weekdays
+        plt.xticks(x_pos+width/2., np.asarray(xticks))
+        plt.ylabel('Run Total')
+        plt.xlabel('Date of Production')
+        plt.title("Production Schedule for "+ line + " -- "+s.date)
+        bottom = np.zeros(N,)
 
-       # build graph and print data
-       print("Building graph ("+line+")")
-       bars = []
-       batch_labels = [value for sublist in batches_to_plot for value in sublist] # turns lsit of lists into a flat lsit of values
-       for i, b in enumerate(batches_to_plot):
-           bars.append(ax.bar(x_pos, np.asarray(b), width, bottom=bottom, color = cols[i % len(cols)]))
-           # add the batch value to the offset of the bar positions
-           bottom += b
+        # build graph and print data
+        print("Building graph ("+line+")")
+        bars = []
+        batch_labels = [value for sublist in batches_to_plot for value in sublist] # turns lsit of lists into a flat lsit of values
+        for i, b in enumerate(batches_to_plot):
+            bars.append(ax.bar(x_pos, np.asarray(b), width, bottom=bottom, color = cols[i % len(cols)]))
+            # add the batch value to the offset of the bar positions
+            bottom += b
 
-       # add labels
-       for j in range(len(bars)):
-           for i, bar in enumerate(bars[j].get_children()):
-               bl = bar.get_xy()
-               x = 0.5*bar.get_width() + bl[0]
-               y = 0.5*bar.get_height() + bl[1]
-               if not batches_to_plot[j][i] == 0:
-                   ax.text(x,y, "%d" % (batches_to_plot[j][i]), ha='center', va = 'center')
+        # add labels
+        for j in range(len(bars)):
+            for i, bar in enumerate(bars[j].get_children()):
+                bl = bar.get_xy()
+                x = 0.5*bar.get_width() + bl[0]
+                y = 0.5*bar.get_height() + bl[1]
+                if not batches_to_plot[j][i] == 0:
+                    ax.text(x,y, "%d" % (batches_to_plot[j][i]), ha='center', va = 'center')
 
-       # trend line
-       y = np.array([r.expected_total for r in s.runs[line]])
-       plt.plot(y)
+        # trend line
+        x = x_pos
+        y = np.array([r.expected_total for r in s.runs[line]])
+        fit = polyfit(x,y,1)
+        fit_fn = poly1d(fit)
+        trendline = plt.plot(x,y, 'ro', x, fit_fn(x), '--k', linewidth=2)
 
-       # save figures to appropriate directories
-       if not os.path.exists(filepath):
-           os.makedirs(filepath)
-       plt.savefig(filepath + line + '.pdf')
+        # save figures to appropriate directories
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+        filename = line + '.pdf'
+        if os.path.exists(filepath + filename):
+            choice = input(filename + " already exists. Overwrite? (y/n) ")
+            if choice == 'y':
+                os.remove(filepath+filename)
+                print("Overwriting...")
+            else:
+               continue 
+        plt.savefig(filepath + filename)
+    print("Report complete ({0})".format(s.date))
 
 def error(error_message = None):
     if not error_message:
@@ -163,8 +178,14 @@ while True:
                    continue
             for i, s in zip(range(len(schedules)), schedules):
                 print (str(i) +" -- " +s.to_pretty_string())
-            selection= int(input("Select schedule: "))
-            curr_schedule = schedules[selection]
+            while True:
+               try:
+                   selection= int(input("Select schedule: "))
+                   if selection >= 0 and selection < len(schedules):
+                       curr_schedule = schedules[selection]
+                       break
+               except ValueError:
+                   continue
             plot(curr_schedule, script_root_directory+'\\reports\\'+curr_schedule.date+'\\')
             continue
         try:
