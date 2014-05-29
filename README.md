@@ -1,4 +1,4 @@
-A program that models production lines in the Shell plant. As an alternative to modelling data using excel, this project aims to do analysis and simulation using Python. 
+A program that models production lines in the Shell plant. As an alternative to modelling data using excel, this project aims to do analysis and simulation using Python (and numpy/matplotlib to do the graphing). 
 
 The main components:
 
